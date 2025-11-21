@@ -109,3 +109,22 @@ export const openDetectionsStream = (onDetection: (detection: Detection) => void
   return source;
 };
 
+export interface UploadRecord {
+  fileName: string;
+  size: number;
+  uploadedAt: string;
+  contentType?: string;
+}
+
+export const uploadImage = (fileName: string, dataUrl: string, contentType?: string) =>
+  request<UploadRecord>("/api/uploads", {
+    method: "POST",
+    body: JSON.stringify({
+      fileName,
+      dataUrl,
+      contentType,
+    }),
+  });
+
+export const listUploads = () => request<UploadRecord[]>("/api/uploads");
+

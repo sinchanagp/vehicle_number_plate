@@ -1,86 +1,24 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import StatCard from "@/components/StatCard";
 import WebcamPreview from "@/components/WebcamPreview";
 import DetectionPanel from "@/components/DetectionPanel";
 import DetectionsTable from "@/components/DetectionsTable";
 import { LogIn, LogOut, Shield, Camera } from "lucide-react";
-import {
-  getSummary,
-  listDetections,
-  openDetectionsStream,
-  type Detection,
-  type SummaryResponse,
-} from "@/lib/api";
+import { useMemo } from "react";
+import useDetections from "@/hooks/use-detections";
 
 const Index = () => {
-  const [summary, setSummary] = useState<SummaryResponse | null>(null);
-  const [detections, setDetections] = useState<Detection[]>([]);
-  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
-  const [isLoadingDetections, setIsLoadingDetections] = useState(false);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
-  const [detectionsError, setDetectionsError] = useState<string | null>(null);
+  const {
+    summary,
+    detections,
+    latestDetection,
+    isLoadingSummary,
+    isLoadingDetections,
+    summaryError,
+    detectionsError,
+    refreshDetections,
+  } = useDetections();
 
-  const refreshSummary = useCallback(
-    (withLoading = false) => {
-      if (withLoading) {
-        setIsLoadingSummary(true);
-      }
-      getSummary()
-        .then((data) => {
-          setSummary(data);
-          setSummaryError(null);
-        })
-        .catch((error: Error) => {
-          console.error("Failed to load summary", error);
-          setSummaryError("Failed to load summary data.");
-        })
-        .finally(() => {
-          if (withLoading) {
-            setIsLoadingSummary(false);
-          }
-        });
-    },
-    [],
-  );
-
-  const refreshDetections = useCallback(() => {
-    setIsLoadingDetections(true);
-    listDetections({ limit: 20 })
-      .then((response) => {
-        setDetections(response.data);
-        setDetectionsError(null);
-      })
-      .catch((error: Error) => {
-        console.error("Failed to load detections", error);
-        setDetectionsError("Failed to load detections.");
-      })
-      .finally(() => setIsLoadingDetections(false));
-  }, []);
-
-  useEffect(() => {
-    refreshSummary(true);
-  }, [refreshSummary]);
-
-  useEffect(() => {
-    refreshDetections();
-  }, [refreshDetections]);
-
-  useEffect(() => {
-    const stream = openDetectionsStream((incoming) => {
-      setDetections((prev) => {
-        const filtered = prev.filter((existing) => existing.id !== incoming.id);
-        return [incoming, ...filtered].slice(0, 20);
-      });
-      refreshSummary();
-    });
-
-    return () => {
-      stream?.close();
-    };
-  }, [refreshSummary]);
-
-  const latestDetection = detections[0] ?? null;
   const webcamModeValue = useMemo(() => {
     if (isLoadingSummary) return "Loading...";
     return summary ? summary.cameraStatus.mode.toUpperCase() : "Unknown";

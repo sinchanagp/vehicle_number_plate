@@ -6,6 +6,7 @@ import morgan from "morgan";
 import detectionsRouter from "./routes/detections";
 import summaryRouter from "./routes/summary";
 import cameraRouter from "./routes/camera";
+import uploadsRouter from "./routes/uploads";
 
 const app = express();
 
@@ -15,7 +16,7 @@ app.use(
     origin: process.env.CORS_ORIGIN ?? "*",
   }),
 );
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({ limit: "15mb" }));
 app.use(morgan("dev"));
 
 app.get("/health", (_req, res) => {
@@ -25,6 +26,7 @@ app.get("/health", (_req, res) => {
 app.use("/api/detections", detectionsRouter);
 app.use("/api/summary", summaryRouter);
 app.use("/api/camera", cameraRouter);
+app.use("/api/uploads", uploadsRouter);
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
